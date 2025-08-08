@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>알레르기 식단 필터</title>
+    <style>
+        body {
+            font-family: 'Malgun Gothic', Arial, sans-serif;
+            margin: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        .checkbox-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 20px 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .checkbox-item input[type="checkbox"] {
+            transform: scale(1.2);
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 20px 0;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .results {
+            margin-top: 30px;
+        }
+        .day-section {
+            margin-bottom: 20px;
+            border-left: 4px solid #dc3545;
+            padding-left: 15px;
+        }
+        .day-title {
+            color: #dc3545;
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .menu-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .menu-item {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 4px;
+        }
+        .no-warnings {
+            text-align: center;
+            color: #28a745;
+            font-size: 18px;
+            padding: 20px;
+            background-color: #d4edda;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍽️ 알레르기 식단 필터</h1>
+
+        <!-- 알러지 목록 표 -->
+        <table>
+            <thead>
+                <tr>
+                    <th>번호</th>
+                    <th>알레르기</th>
+                </tr>
+            </thead>
+            <tbody id="allergyTable">
+                <!-- JavaScript로 채움 -->
+            </tbody>
+        </table>
+
+        <!-- 알러지 다중 선택 -->
+        <h3>⚠️ 해당하는 알러지를 체크하세요:</h3>
+        <div class="checkbox-container" id="checkboxContainer">
+            <!-- JavaScript로 채움 -->
+        </div>
+        
+        <button onclick="filterAllergies()">🔍 알레르기 식단 확인</button>
+
+        <!-- 결과 표시 -->
+        <div class="results" id="results"></div>
+    </div>
+
+    <script>
+        // 알레르기 데이터
+        const allergyDict = {
+            1: "난류", 2: "우유", 3: "메밀", 4: "땅콩", 5: "대두", 6: "밀",
+            7: "고등어", 8: "게", 9: "새우", 10: "돼지고기", 11: "복숭아", 12: "토마토",
+            13: "아황산류", 14: "호두", 15: "닭고기", 16: "쇠고기", 17: "오징어",
+            18: "조개류", 19: "잣"
+        };
+
+        // 메뉴 데이터
+        const menuData = {
+            "5/26": [
+                {"menu": "미트소스스파게티", "allergies": [1,2,5,6,10,12,13,15,16]},
+                {"menu": "추가밥", "allergies": []},
+                {"menu": "함박스테이크", "allergies": [1,2,6,10,12,13,15,16]},
+                {"menu": "매쉬드포테이토", "allergies": [5,6]},
+                {"menu": "오이피클", "allergies": [13]},
+                {"menu": "깍두기", "allergies": [9,13]},
+            ],
+            "5/27": [
+                {"menu": "현미밥", "allergies": []},
+                {"menu": "부대찌개", "allergies": [5,6,10,13]},
+                {"menu": "순살안동찜닭", "allergies": [5,6,15]},
+                {"menu": "부추전*초간장", "allergies": [5,6]},
+                {"menu": "백김치", "allergies": [9,13]},
+                {"menu": "방울토마토", "allergies": [12]},
+            ],
+            "5/28": [
+                {"menu": "백미밥", "allergies": []},
+                {"menu": "나가사끼짬뽕", "allergies": [5,6,10,13,17,18]},
+                {"menu": "후후츠탕수육", "allergies": [5,6,10,12,13]},
+                {"menu": "두부조림", "allergies": [5,6]},
+                {"menu": "꼬들단무지", "allergies": [13]},
+                {"menu": "포기김치", "allergies": [9,13]},
+            ],
+            "5/29": [
+                {"menu": "기장밥", "allergies": []},
+                {"menu": "어묵국", "allergies": [5,6]},
+                {"menu": "돈사태장조림", "allergies": [5,6,10]},
+                {"menu": "고구마튀김*간장", "allergies": [5,6]},
+                {"menu": "깍두기", "allergies": [9,13]},
+                {"menu": "오렌지", "allergies": []},
+            ],
+            "5/30": [
+                {"menu": "나물비빔밥*양념장", "allergies": [5,6]},
+                {"menu": "순두부찌개", "allergies": [5,6,10]},
+                {"menu": "순살치킨", "allergies": [1,2,5,6,13,15]},
+                {"menu": "콘샐러드", "allergies": [1,5,6,13,15]},
+                {"menu": "포기김치", "allergies": [9,13]},
+                {"menu": "한국요구르트", "allergies": [2]},
+            ]
+        };
+
+        // 페이지 로드 시 초기화
+        window.onload = function() {
+            // 알레르기 표 생성
+            const tableBody = document.getElementById('allergyTable');
+            Object.entries(allergyDict).forEach(([num, name]) => {
+                const row = tableBody.insertRow();
+                row.insertCell(0).textContent = num;
+                row.insertCell(1).textContent = name;
+            });
+
+            // 체크박스 생성
+            const checkboxContainer = document.getElementById('checkboxContainer');
+            Object.entries(allergyDict).forEach(([num, name]) => {
+                const div = document.createElement('div');
+                div.className = 'checkbox-item';
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.name = 'allergies';
+                checkbox.value = num;
+                checkbox.id = `allergy_${num}`;
+                
+                const label = document.createElement('label');
+                label.htmlFor = `allergy_${num}`;
+                label.textContent = `${num}. ${name}`;
+                
+                div.appendChild(checkbox);
+                div.appendChild(label);
+                checkboxContainer.appendChild(div);
+            });
+        };
+
+        // 알레르기 필터링 함수
+        function filterAllergies() {
+            const checkboxes = document.querySelectorAll('input[name="allergies"]:checked');
+            const selectedAllergies = Array.from(checkboxes).map(cb => parseInt(cb.value));
+            
+            if (selectedAllergies.length === 0) {
+                document.getElementById('results').innerHTML = 
+                    '<div class="no-warnings">알레르기를 선택해주세요.</div>';
+                return;
+            }
+
+            const warnings = checkAllergy(selectedAllergies);
+            displayResults(warnings);
+        }
+
+        // 알레르기 체크 함수
+        function checkAllergy(userAllergies) {
+            const warnings = {};
+            
+            Object.entries(menuData).forEach(([day, menus]) => {
+                const matched = [];
+                menus.forEach(item => {
+                    if (item.allergies.some(a => userAllergies.includes(a))) {
+                        matched.push(item.menu);
+                    }
+                });
+                if (matched.length > 0) {
+                    warnings[day] = matched;
+                }
+            });
+            
+            return warnings;
+        }
+
+        // 결과 표시 함수
+        function displayResults(warnings) {
+            const resultsDiv = document.getElementById('results');
+            
+            if (Object.keys(warnings).length === 0) {
+                resultsDiv.innerHTML = 
+                    '<div class="no-warnings">🎉 선택하신 알레르기에 해당하는 위험 메뉴가 없습니다!</div>';
+                return;
+            }
+
+            let html = '<h2>⚠️ 주의해야 할 식단:</h2>';
+            
+            Object.entries(warnings).forEach(([day, dishes]) => {
+                html += `
+                    <div class="day-section">
+                        <div class="day-title">${day}</div>
+                        <ul class="menu-list">
+                            ${dishes.map(dish => `<li class="menu-item">${dish}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+            });
+            
+            resultsDiv.innerHTML = html;
+        }
+    </script>
+</body>
+</html>
